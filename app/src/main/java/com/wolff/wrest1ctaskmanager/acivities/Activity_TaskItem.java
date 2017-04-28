@@ -53,6 +53,13 @@ public class Activity_TaskItem extends AppCompatActivity {
                 return mWTaskList.size();
             }
         });
+    mViewPager.setCurrentItem(mWTaskList.indexOf(mCurrentTask));
+        /*for (int i = 0; i < mWTaskList.size(); i++) {
+            if (mWTaskList.get(i).getRef_Key().equals(mCurrentTask.getRef_Key())) {
+                mViewPager.setCurrentItem(i);
+                break;
+            }
+        }*/
 
     }
 }

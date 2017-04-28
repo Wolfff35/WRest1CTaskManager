@@ -68,7 +68,7 @@ private class TaskListHolder extends RecyclerView.ViewHolder implements View.OnC
 
     public TaskListHolder(View itemView) {
         super(itemView);
-        mTitleTextView = (TextView)itemView;
+        mTitleTextView = (TextView) itemView.findViewById(R.id.tvTaskDescribe);
         itemView.setOnClickListener(this);
     }
     public void bindTaskListItem(WTask item){
@@ -85,14 +85,15 @@ private class TaskListHolder extends RecyclerView.ViewHolder implements View.OnC
 }
 //--------------------------------------------------------------------------------------------------
     private class TaskListAdapter extends RecyclerView.Adapter<TaskListHolder>{
-        //private List<WTask> mTaskListItems;
     public TaskListAdapter(List<WTask> taskListItems){
         mTaskList=taskListItems;
     }
+
     @Override
     public TaskListHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        TextView textView = new TextView(getActivity());
-        return new TaskListHolder(textView);
+        LayoutInflater inflater = LayoutInflater.from(getActivity());
+        View view = inflater.inflate(R.layout.task_list_adapter_item,parent,false);
+        return new TaskListHolder(view);
     }
 
     @Override
