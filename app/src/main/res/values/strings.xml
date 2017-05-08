@@ -3,4 +3,7 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="fragment_taskitem_menu_save">Сохранить</string>
+    <string name="fragment_taskitem_menu_delete">Удалить</string>
+    <string name="fragment_taskitem_menu_updatelist">Обновить</string>
 </resources>

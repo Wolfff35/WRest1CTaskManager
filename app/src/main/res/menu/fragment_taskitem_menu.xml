@@ -4,6 +4,11 @@
     <item
         android:id="@+id/menu_save"
         android:icon="@android:drawable/ic_menu_save"
-        android:title="Сохранить"
+        android:title="@string/fragment_taskitem_menu_save"
+        app:showAsAction="ifRoom|withText"/>
+    <item
+        android:id="@+id/menu_delete"
+        android:icon="@android:drawable/ic_menu_delete"
+        android:title="@string/fragment_taskitem_menu_delete"
         app:showAsAction="ifRoom|withText"/>
 </menu>

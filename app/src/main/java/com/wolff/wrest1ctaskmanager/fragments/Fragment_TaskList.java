@@ -9,6 +9,9 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -28,6 +31,7 @@ import java.util.List;
  */
 
 public class Fragment_TaskList extends Fragment {
+    private Menu optionsMenu;
     private RecyclerView mTaskListRecyclerView;
     private List<WUser> mWUsersList;
     private List<WContragent> mContragentsList;
@@ -40,11 +44,16 @@ public class Fragment_TaskList extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
         setRetainInstance(true);
+        updateTaskList();
+        Log.e("","");
+    }
+
+    private void updateTaskList() {
         new GetWUsers_Task().execute();
         new GetWContragents_Task().execute();
         new GetWTasks_Task().execute();
-        Log.e("","");
     }
 
     @Nullable
@@ -60,6 +69,33 @@ public class Fragment_TaskList extends Fragment {
         if(isAdded()){
             mTaskListRecyclerView.setAdapter(new TaskListAdapter(mTaskList));
         }
+    }
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        this.optionsMenu = menu;
+        inflater.inflate(R.menu.fragment_tasklist_menu, menu);
+        super.onCreateOptionsMenu(optionsMenu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.menu_updatelist:
+                updateTaskList();
+                setOptionsMenuVisibility(false);
+            break;
+            default:
+
+            break;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+    private void setOptionsMenuVisibility(boolean isVisible){
+        MenuItem item_edit = optionsMenu.findItem(R.id.menu_updatelist);
+        item_edit.setVisible(isVisible);
+
     }
 //==================================================================================================
 private class TaskListHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
@@ -155,6 +191,7 @@ public class GetWContragents_Task extends AsyncTask<Void,Void,List<WContragent>>
             super.onPostExecute(wTasks);
             mTaskList = wTasks;
             setupAdapter();
+            setOptionsMenuVisibility(true);
         }
     }
 }

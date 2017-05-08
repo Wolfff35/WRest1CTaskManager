@@ -31,6 +31,7 @@ public class Fragment_TaskItem extends Fragment {
     private EditText edContent;
     private Switch switchIsInWork;
     private Switch switchIsClosed;
+    private Menu optionsMenu;
 
     public static Fragment_TaskItem newInstance(WTask item, Context context) {
 
@@ -76,11 +77,26 @@ public class Fragment_TaskItem extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
+        this.optionsMenu = menu;
+        inflater.inflate(R.menu.fragment_taskitem_menu, menu);
+        super.onCreateOptionsMenu(optionsMenu, inflater);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.menu_save:
+
+                break;
+            case R.id.menu_delete:
+
+                break;
+            default:
+
+                break;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 }
