@@ -1,6 +1,9 @@
 package com.wolff.wrest1ctaskmanager.model;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.util.Base64;
 import android.util.Log;
 
@@ -24,14 +27,25 @@ import java.util.List;
  */
 
 public class W1c_fetchr {
-    String TAG = "W1c_fetchr";
-
-    private HttpURLConnection getConnection(String catalog){
+    //String TAG = "W1c_fetchr";
+    public String getBaseUrl(){
+        String serverName = "13.10.12.10";
+        String baseName = "v83_zadacha";
+        return "http://"+serverName+"/"+baseName+"/odata/standard.odata/";
+    }
+    public HttpURLConnection getConnection(Context context,String type,String catalog,String guidCurrentUser){
         try {
-
-            //URL url = new URL(Const.BASE_URL+catalog+"/"+Const.RESULT_FORMAT);
-            String url_s = Uri.parse(Const.BASE_URL+catalog+"/").buildUpon().appendQueryParameter("$format","json").build().toString();
-
+            String url_s;
+            if(type.equalsIgnoreCase("GET")) {
+                url_s = Uri.parse(getBaseUrl() + catalog + "/").buildUpon().appendQueryParameter("$format", "json").build().toString()+getFiltersForQuery(context,catalog,guidCurrentUser);
+            }else if(type.equalsIgnoreCase("PATCH")) {
+                url_s = Uri.parse(getBaseUrl() + catalog + "/").buildUpon().appendQueryParameter("$format", "json").build().toString();
+            }else if(type.equalsIgnoreCase("POST")){
+                url_s = Uri.parse(getBaseUrl() + catalog).buildUpon().build().toString();
+            }else {
+                url_s=null;
+            }
+            Log.e("GET CONNECTION",""+url_s);
             URL url = new URL(url_s);
             HttpURLConnection connection = (HttpURLConnection)url.openConnection();
             String authString = Const.LOGIN+ ":" + Const.PASSWORD;
@@ -46,10 +60,8 @@ public class W1c_fetchr {
         return null;
     }
 
-    public byte[] getUrlBytes(String catalog) throws IOException {
-        //URL url = new URL(urlSpec);
-       // HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-        HttpURLConnection connection = getConnection(catalog);
+    public byte[] getUrlBytes(Context context,String catalog,String guidCurrentUser) throws IOException {
+        HttpURLConnection connection = getConnection(context,"GET",catalog,guidCurrentUser);
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             InputStream in = connection.getInputStream();
@@ -68,14 +80,74 @@ public class W1c_fetchr {
             connection.disconnect();
         }
     }
-    public String getUrlString(String catalog) throws IOException {
-        return new String(getUrlBytes(catalog));
+    public String getUrlString(Context context,String catalog,String guidCurrentUser) throws IOException {
+        return new String(getUrlBytes(context,catalog,guidCurrentUser));
     }
 //--------------------------------------------------------------------------------------------------
-    public List<WUser> fetchWUsers(){
+private String getFiltersForQuery(Context context,String catalog, String guidCurrentUser){
+    //&$filter=DeletionMark eq false -  не помеченные на удаление
+    //&$filter=фЗавершена eq false - не завершенные
+    //&$filter=Автор_Key eq guid'4b1b55a1-bc6d-11e6-80c2-f2bd425ab9dd' = автор
+    //&$filter=Исполнитель_Key eq guid'4b1b55a1-bc6d-11e6-80c2-f2bd425ab9dd' = программист
+    SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+    boolean iAmAuthor = sp.getBoolean("iAmAuthor",false);
+    boolean iAmProgrammer = sp.getBoolean("iAmProgrammer",false);
+    boolean notDeleted = sp.getBoolean("notDeleted",false);
+    boolean notFinished = sp.getBoolean("notFinished",false);
+    //boolean hasFilter = false;
+    boolean isFirst=false;
+    StringBuffer sb = new StringBuffer();
+
+    if(catalog.equalsIgnoreCase("Catalog_Пользователи/")){
+        return "";
+    }else if(catalog.equalsIgnoreCase("Catalog_Tasks/")){
+        Log.e("GET FILTER","iAmAuthor = "+iAmAuthor);
+        Log.e("GET FILTER","iAmProgrammer = "+iAmProgrammer);
+        Log.e("GET FILTER","notDeleted = "+notDeleted);
+        Log.e("GET FILTER","notFinished = "+notFinished);
+
+        if(iAmAuthor|iAmProgrammer|notDeleted|notFinished){
+            //hasFilter=true;
+            sb.append("&$filter=");
+        }else{
+            return "";
+        }
+        if (iAmAuthor){
+            isFirst=true;
+            sb.append("Автор_Key%20eq%20guid'"+guidCurrentUser+"'");
+        }
+        if (iAmProgrammer){
+            if(isFirst){
+                sb.append("%20and%20");
+            }
+            isFirst=true;
+            sb.append("Исполнитель_Key%20eq%20guid'"+guidCurrentUser+"'");
+        }
+        if (notDeleted){
+            if(isFirst){
+                sb.append("%20and%20");
+            }
+            isFirst=true;
+            sb.append("DeletionMark%20eq%20false");
+        }
+        if (notFinished){
+            if(isFirst){
+                sb.append("%20and%20");
+            }
+            sb.append("фЗавершена%20eq%20false");
+        }
+        Log.e("GET FILTER",""+sb.toString());
+        return  sb.toString();
+    }
+    return "";
+}
+
+
+    //--------------------------------------------------------------------------------------------------
+    public List<WUser> fetchWUsers(Context context){
         List<WUser> wUsers = new ArrayList<>();
         try {
-            String jsonStringUsers = getUrlString(Const.CATALOG_USERS);
+            String jsonStringUsers = getUrlString(context,Const.CATALOG_USERS,null);
             JSONObject jsonbody = new JSONObject(jsonStringUsers);
             parseWUsers(wUsers,jsonbody);
             return wUsers;
@@ -110,10 +182,10 @@ public class W1c_fetchr {
 
       }
 //--------------------------------------------------------------------------------------------------
-public List<WContragent> fetchWContragents(){
+public List<WContragent> fetchWContragents(Context context){
     List<WContragent> wContragents = new ArrayList<>();
     try {
-        String jsonStringUsers = getUrlString(Const.CATALOG_KONTRAG);
+        String jsonStringUsers = getUrlString(context,Const.CATALOG_KONTRAG,null);
         JSONObject jsonbody = new JSONObject(jsonStringUsers);
         parseWContragents(wContragents,jsonbody);
         return wContragents;
@@ -142,10 +214,10 @@ public List<WContragent> fetchWContragents(){
     }
 
     //--------------------------------------------------------------------------------------------------
-    public List<WTask> fetchWTasks(){
+    public List<WTask> fetchWTasks(Context context,String guidCurrentUser){
         List<WTask> wTasks = new ArrayList<>();
         try {
-            String jsonStringUsers = getUrlString(Const.CATALOG_TASKS);
+            String jsonStringUsers = getUrlString(context,Const.CATALOG_TASKS,guidCurrentUser);
             JSONObject jsonbody = new JSONObject(jsonStringUsers);
             parseWTasks(wTasks,jsonbody);
             return wTasks;
@@ -157,7 +229,7 @@ public List<WContragent> fetchWContragents(){
         return null;
     }
     private void parseWTasks(List<WTask> wTasks, JSONObject jsonBody) {
-        try {
+         try {
             JSONArray usersJsonArray = jsonBody.getJSONArray("value");
             for (int i = 0; i < usersJsonArray.length(); i++) {
                 JSONObject userJsonObject = usersJsonArray.getJSONObject(i);

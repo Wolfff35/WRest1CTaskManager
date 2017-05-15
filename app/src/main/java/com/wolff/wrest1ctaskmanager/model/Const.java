@@ -5,7 +5,6 @@ package com.wolff.wrest1ctaskmanager.model;
  */
 
 public class Const {
-    public static final String BASE_URL = "http://13.10.12.10/v83_zadacha/odata/standard.odata/";
     public static final String LOGIN = "wolf";
     public static final String PASSWORD = "1";
 
@@ -20,5 +19,8 @@ public class Const {
 
     public static final String DATE_FORMAT_STR = "yyyy-MM-dd'T'HH:mm:ss";
     public static final String DATE_FORMAT_VID = "dd-MM-yyyy";
+
+    public static final int READ_TIMEOUT = 10000;
+    public static final int CONNECT_TIMEOUT = 15000;
 
 }

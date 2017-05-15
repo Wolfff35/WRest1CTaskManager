@@ -1,12 +1,17 @@
 package com.wolff.wrest1ctaskmanager.fragments;
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,6 +23,8 @@ import android.widget.TextView;
 
 import com.wolff.wrest1ctaskmanager.R;
 import com.wolff.wrest1ctaskmanager.acivities.Activity_TaskItem;
+import com.wolff.wrest1ctaskmanager.acivities.Activity_preference;
+import com.wolff.wrest1ctaskmanager.model.Const;
 import com.wolff.wrest1ctaskmanager.model.W1c_fetchr;
 import com.wolff.wrest1ctaskmanager.model.WContragent;
 import com.wolff.wrest1ctaskmanager.model.WTask;
@@ -33,10 +40,10 @@ import java.util.List;
 public class Fragment_TaskList extends Fragment {
     private Menu optionsMenu;
     private RecyclerView mTaskListRecyclerView;
-    private List<WUser> mWUsersList;
+    private List<WUser> mUsersList;
     private List<WContragent> mContragentsList;
     private List<WTask> mTaskList = new ArrayList<>();
-
+    private String mCurrentUserGuid;
     public static Fragment_TaskList newInstance(){
         return new Fragment_TaskList();
     }
@@ -85,7 +92,14 @@ public class Fragment_TaskList extends Fragment {
                 updateTaskList();
                 setOptionsMenuVisibility(false);
             break;
+            case R.id.menu_addnewtask:
+                addNewTask();
+                break;
+            case R.id.menu_preferences:
+                openPreferences();
+                break;
             default:
+
 
             break;
         }
@@ -93,8 +107,21 @@ public class Fragment_TaskList extends Fragment {
         return super.onOptionsItemSelected(item);
     }
     private void setOptionsMenuVisibility(boolean isVisible){
-        MenuItem item_edit = optionsMenu.findItem(R.id.menu_updatelist);
-        item_edit.setVisible(isVisible);
+        if(optionsMenu!=null) {
+            MenuItem item_edit = optionsMenu.findItem(R.id.menu_updatelist);
+            item_edit.setVisible(isVisible);
+        }
+    }
+    private void addNewTask(){
+        Log.e("ADD NEW TASK"," NULL");
+        Intent intent = Activity_TaskItem.newIntent(getContext(),null,null,(ArrayList<WUser>) mUsersList,(ArrayList<WContragent>) mContragentsList);
+        startActivity(intent);
+
+    }
+    private void openPreferences(){
+        Log.e("OPEN PREF"," NULL");
+        Intent intent = Activity_preference.newIntent(getContext());
+        startActivity(intent);
 
     }
 //==================================================================================================
@@ -109,16 +136,35 @@ private class TaskListHolder extends RecyclerView.ViewHolder implements View.OnC
     }
     public void bindTaskListItem(WTask item){
         mCurrentTask = item;
+      //
+        //String label = formatListItem(mCurrentTask);
+        if(mCurrentTask.isClosed()){
+            mTitleTextView.setTypeface(null, Typeface.ITALIC);
+        }
+        if(mCurrentTask.isInWork()){
+            mTitleTextView.setTypeface(null, Typeface.BOLD);
+        }
+        if(mCurrentTask.isDeletionMark()) {
+         }
+        //mTitleTextView.setText(Html.fromHtml(label));
+        mTitleTextView.setText(mCurrentTask.getDescription());
+        //mTitleTextView.setText("Автор: "+mCurrentTask.getAuthor().getName()+", Дата создания:"+convert.dateToString(mCurrentTask.getDateCreate(),DATE_FORMAT_VID));
+
+
+        //
         mTitleTextView.setText(item.toString());
     }
 
+
+ //-------------------------------------------------------------------------------------------------
     @Override
     public void onClick(View v) {
         Log.e("ON CLICK"," "+mCurrentTask.getDescription());
-        Intent intent = Activity_TaskItem.newIntent(v.getContext(),mCurrentTask,(ArrayList<WTask>) mTaskList);
+        Intent intent = Activity_TaskItem.newIntent(v.getContext(),mCurrentTask,(ArrayList<WTask>) mTaskList,(ArrayList<WUser>) mUsersList,(ArrayList<WContragent>)mContragentsList);
         startActivity(intent);
     }
 }
+
 //--------------------------------------------------------------------------------------------------
     private class TaskListAdapter extends RecyclerView.Adapter<TaskListHolder>{
     public TaskListAdapter(List<WTask> taskListItems){
@@ -151,13 +197,18 @@ private class TaskListHolder extends RecyclerView.ViewHolder implements View.OnC
         @Override
         protected List<WUser> doInBackground(Void... params) {
             W1c_fetchr w1c_fetchr = new W1c_fetchr();
-            return w1c_fetchr.fetchWUsers();
+            return w1c_fetchr.fetchWUsers(getActivity().getApplicationContext());
         }
 
         @Override
         protected void onPostExecute(List<WUser> wUsers) {
             super.onPostExecute(wUsers);
-            mWUsersList = wUsers;
+            mUsersList = wUsers;
+            for(WUser item:mUsersList){
+                if(item.getDescription().equalsIgnoreCase(Const.LOGIN)){
+                    mCurrentUserGuid=item.getRef_Key();
+                }
+            }
         }
     }
 //==================================================================================================
@@ -167,7 +218,7 @@ public class GetWContragents_Task extends AsyncTask<Void,Void,List<WContragent>>
     @Override
     protected List<WContragent> doInBackground(Void... params) {
         W1c_fetchr w1c_fetchr = new W1c_fetchr();
-        return w1c_fetchr.fetchWContragents();
+        return w1c_fetchr.fetchWContragents(getActivity().getApplicationContext());
     }
 
     @Override
@@ -183,7 +234,7 @@ public class GetWContragents_Task extends AsyncTask<Void,Void,List<WContragent>>
         @Override
         protected List<WTask> doInBackground(Void... params) {
             W1c_fetchr w1c_fetchr = new W1c_fetchr();
-            return w1c_fetchr.fetchWTasks();
+            return w1c_fetchr.fetchWTasks(getActivity().getApplicationContext(),mCurrentUserGuid);
         }
 
         @Override

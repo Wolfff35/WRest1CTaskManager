@@ -1,10 +1,13 @@
 package com.wolff.wrest1ctaskmanager.model;
 
+import java.io.Serializable;
+
 /**
  * Created by wolff on 26.04.2017.
  */
 
-public class WUser extends WCatalog {
+public class WUser extends WCatalog implements Serializable {
+    private static final long serialVersionUID = 2167771469151804396L;
     private boolean mIsUser;
     private boolean mIsProg;
     private boolean mIsGod;

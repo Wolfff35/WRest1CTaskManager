@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <android.support.v7.preference.PreferenceCategory android:title="Настройки подключения">
+
+        <android.support.v7.preference.EditTextPreference
+            android:key="serverName"
+            android:summary="Сервер базы данных"
+            android:title="Сервер">
+        </android.support.v7.preference.EditTextPreference>
+        <android.support.v7.preference.EditTextPreference
+            android:key="baseName"
+            android:summary="Имя базы 1с"
+            android:title="Имя базы">
+        </android.support.v7.preference.EditTextPreference>
+        <android.support.v7.preference.EditTextPreference
+            android:key="serverLogin"
+            android:summary="Имя пользователя базы"
+            android:title="Логин">
+        </android.support.v7.preference.EditTextPreference>
+        <android.support.v7.preference.EditTextPreference
+            android:key="serverPassword"
+            android:title="Пароль">
+        </android.support.v7.preference.EditTextPreference>
+     </android.support.v7.preference.PreferenceCategory>
+    <android.support.v7.preference.PreferenceCategory android:title="Отборы задач">
+
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:title="По авторству"
+            android:key="iAmAuthor" />
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:title="По ответственному"
+            android:key="iAmProgrammer" />
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:title="Только не помеченные на удаление"
+            android:key="notDeleted" />
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:title="Только не завершенные"
+            android:key="notFinished" />
+    </android.support.v7.preference.PreferenceCategory>
+</android.support.v7.preference.PreferenceScreen>
