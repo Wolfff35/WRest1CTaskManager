@@ -23,7 +23,9 @@
             android:name=".acivities.Activity_TaskItem"
             android:parentActivityName=".acivities.ActivityMain">
         </activity>
-        <activity android:name=".acivities.Activity_preference">
+        <activity
+            android:name=".acivities.Activity_preference">
+            android:parentActivityName=".acivities.ActivityMain">
         </activity>
     </application>
 
