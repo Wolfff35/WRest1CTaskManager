@@ -1,4 +1,4 @@
-package com.wolff.wrest1ctaskmanager.model;
+package com.wolff.wrest1ctaskmanager.tasks;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -7,6 +7,10 @@ import android.preference.PreferenceManager;
 import android.util.Base64;
 import android.util.Log;
 
+import com.wolff.wrest1ctaskmanager.model.Const;
+import com.wolff.wrest1ctaskmanager.model.WContragent;
+import com.wolff.wrest1ctaskmanager.model.WTask;
+import com.wolff.wrest1ctaskmanager.model.WUser;
 import com.wolff.wrest1ctaskmanager.utils.Utils;
 
 import org.json.JSONArray;
@@ -27,28 +31,28 @@ import java.util.List;
  */
 
 public class W1c_fetchr {
-    //String TAG = "W1c_fetchr";
-    public String getBaseUrl(){
-        String serverName = "13.10.12.10";
-        String baseName = "v83_zadacha";
-        return "http://"+serverName+"/"+baseName+"/odata/standard.odata/";
+    public String getBaseUrl(Context context){
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+        return "http://"+pref.getString("serverName","")+"/"+pref.getString("baseName","")+"/odata/standard.odata/";
     }
+
     public HttpURLConnection getConnection(Context context,String type,String catalog,String guidCurrentUser){
         try {
             String url_s;
             if(type.equalsIgnoreCase("GET")) {
-                url_s = Uri.parse(getBaseUrl() + catalog + "/").buildUpon().appendQueryParameter("$format", "json").build().toString()+getFiltersForQuery(context,catalog,guidCurrentUser);
+                url_s = getBaseUrl(context) + catalog + "/?$format=json"+getFiltersForQuery(context,catalog,guidCurrentUser);
             }else if(type.equalsIgnoreCase("PATCH")) {
-                url_s = Uri.parse(getBaseUrl() + catalog + "/").buildUpon().appendQueryParameter("$format", "json").build().toString();
+                url_s = Uri.parse(getBaseUrl(context) + catalog + "/").buildUpon().appendQueryParameter("$format", "json").build().toString();
             }else if(type.equalsIgnoreCase("POST")){
-                url_s = Uri.parse(getBaseUrl() + catalog).buildUpon().build().toString();
+                url_s = Uri.parse(getBaseUrl(context) + catalog).buildUpon().build().toString();
             }else {
                 url_s=null;
             }
-            Log.e("GET CONNECTION",""+url_s);
+            //Log.e("GET CONNECTION",""+url_s);
             URL url = new URL(url_s);
             HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-            String authString = Const.LOGIN+ ":" + Const.PASSWORD;
+
+            String authString = getAuthorization1C(context);
             String authStringEnc = new String(Base64.encode(authString.getBytes(),0));
             connection.setRequestProperty("Authorization", "Basic " + authStringEnc);
             return connection;
@@ -58,6 +62,11 @@ public class W1c_fetchr {
             e.printStackTrace();
         }
         return null;
+    }
+    private String getAuthorization1C(Context context){
+        //Const.LOGIN+ ":" + Const.PASSWORD
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+        return pref.getString("serverLogin","")+":"+pref.getString("serverPassword","");
     }
 
     public byte[] getUrlBytes(Context context,String catalog,String guidCurrentUser) throws IOException {
@@ -85,29 +94,21 @@ public class W1c_fetchr {
     }
 //--------------------------------------------------------------------------------------------------
 private String getFiltersForQuery(Context context,String catalog, String guidCurrentUser){
-    //&$filter=DeletionMark eq false -  не помеченные на удаление
-    //&$filter=фЗавершена eq false - не завершенные
-    //&$filter=Автор_Key eq guid'4b1b55a1-bc6d-11e6-80c2-f2bd425ab9dd' = автор
-    //&$filter=Исполнитель_Key eq guid'4b1b55a1-bc6d-11e6-80c2-f2bd425ab9dd' = программист
     SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-    boolean iAmAuthor = sp.getBoolean("iAmAuthor",false);
-    boolean iAmProgrammer = sp.getBoolean("iAmProgrammer",false);
+    boolean iAmAuthor = sp.getBoolean("iAmAuthor",false)&&guidCurrentUser!=null;
+    boolean iAmProgrammer = sp.getBoolean("iAmProgrammer",false)&&guidCurrentUser!=null;
     boolean notDeleted = sp.getBoolean("notDeleted",false);
     boolean notFinished = sp.getBoolean("notFinished",false);
-    //boolean hasFilter = false;
     boolean isFirst=false;
     StringBuffer sb = new StringBuffer();
 
-    if(catalog.equalsIgnoreCase("Catalog_Пользователи/")){
-        return "";
-    }else if(catalog.equalsIgnoreCase("Catalog_Tasks/")){
+     if(catalog.equalsIgnoreCase(Const.CATALOG_TASKS)){
         Log.e("GET FILTER","iAmAuthor = "+iAmAuthor);
         Log.e("GET FILTER","iAmProgrammer = "+iAmProgrammer);
         Log.e("GET FILTER","notDeleted = "+notDeleted);
         Log.e("GET FILTER","notFinished = "+notFinished);
 
         if(iAmAuthor|iAmProgrammer|notDeleted|notFinished){
-            //hasFilter=true;
             sb.append("&$filter=");
         }else{
             return "";
@@ -123,7 +124,8 @@ private String getFiltersForQuery(Context context,String catalog, String guidCur
             isFirst=true;
             sb.append("Исполнитель_Key%20eq%20guid'"+guidCurrentUser+"'");
         }
-        if (notDeleted){
+
+if (notDeleted){
             if(isFirst){
                 sb.append("%20and%20");
             }
@@ -214,7 +216,7 @@ public List<WContragent> fetchWContragents(Context context){
     }
 
     //--------------------------------------------------------------------------------------------------
-    public List<WTask> fetchWTasks(Context context,String guidCurrentUser){
+    public List<WTask> fetchWTasks(Context context, String guidCurrentUser){
         List<WTask> wTasks = new ArrayList<>();
         try {
             String jsonStringUsers = getUrlString(context,Const.CATALOG_TASKS,guidCurrentUser);

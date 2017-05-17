@@ -5,8 +5,8 @@ package com.wolff.wrest1ctaskmanager.model;
  */
 
 public class Const {
-    public static final String LOGIN = "wolf";
-    public static final String PASSWORD = "1";
+   // public static final String LOGIN = "wolf";
+   // public static final String PASSWORD = "1";
 
     public static final String RESULT_FORMAT = "?$format=json";
     public static final String CATALOG_USERS = "Catalog_Пользователи";

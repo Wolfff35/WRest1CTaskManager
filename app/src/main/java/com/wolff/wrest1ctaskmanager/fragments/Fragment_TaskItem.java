@@ -14,18 +14,27 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import com.wolff.wrest1ctaskmanager.R;
+import com.wolff.wrest1ctaskmanager.model.Const;
+import com.wolff.wrest1ctaskmanager.model.WContragent;
 import com.wolff.wrest1ctaskmanager.model.WTask;
+import com.wolff.wrest1ctaskmanager.model.WUser;
 import com.wolff.wrest1ctaskmanager.tasks.PostDataToServer;
 import com.wolff.wrest1ctaskmanager.utils.Utils;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import static com.wolff.wrest1ctaskmanager.model.Const.CATALOG_TASKS;
 import static com.wolff.wrest1ctaskmanager.model.Const.DATE_FORMAT_STR;
@@ -35,7 +44,12 @@ import static com.wolff.wrest1ctaskmanager.model.Const.DATE_FORMAT_STR;
  */
 public class Fragment_TaskItem extends Fragment {
     private static final String ARG_WTASK = "WTask";
+    private static final String ARG_CURRENT_USER_GUID = "CurrentUserGuid";
+    private static final String ARG_USER_LIST = "WUserList";
+
     private WTask mCurrentTask;
+    private String mCurrentUserGuid;
+    private List<WUser> mUserList;
     private boolean isNewItem;
     private boolean isDataChanged;
 
@@ -44,12 +58,22 @@ public class Fragment_TaskItem extends Fragment {
     private EditText edContent;
     private Switch switchIsInWork;
     private Switch switchIsClosed;
+    private TextView tvDateCreation;
+    private TextView tvDateClosed;
+    private TextView tvDateInWork;
+    private EditText edNote;
+    private Spinner spBase;
+    private Spinner spProgrammer;
+    private TextView tvAuthor;
+
     private Menu optionsMenu;
 
-    public static Fragment_TaskItem newInstance(WTask item, Context context) {
+    public static Fragment_TaskItem newInstance(Context context, WTask item, String currentUserGuid, ArrayList<WUser> userList) {
 
         Bundle args = new Bundle();
         args.putSerializable(ARG_WTASK,item);
+        args.putString(ARG_CURRENT_USER_GUID,currentUserGuid);
+        args.putSerializable(ARG_USER_LIST,userList);
 
         Fragment_TaskItem fragment = new Fragment_TaskItem();
         fragment.setArguments(args);
@@ -61,10 +85,14 @@ public class Fragment_TaskItem extends Fragment {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         mCurrentTask = (WTask)getArguments().getSerializable(ARG_WTASK);
+        mCurrentUserGuid = getArguments().getString(ARG_CURRENT_USER_GUID);
+        mUserList = (ArrayList<WUser>)getArguments().getSerializable(ARG_USER_LIST);
         if(mCurrentTask==null){
             isNewItem=true;
             isDataChanged=true;
             mCurrentTask = new WTask();
+            mCurrentTask.setAuthor_Key(mCurrentUserGuid);
+            mCurrentTask.setDateCreation(new Date());
         }
     }
 
@@ -78,17 +106,37 @@ public class Fragment_TaskItem extends Fragment {
         edContent = (EditText) v.findViewById(R.id.edContent);
         switchIsInWork = (Switch) v.findViewById(R.id.switchIsInWork);
         switchIsClosed = (Switch) v.findViewById(R.id.switchIsClosed);
+        tvDateCreation = (TextView) v.findViewById(R.id.tvDateCreation);
+        tvDateClosed = (TextView) v.findViewById(R.id.tvDateClosed);
+        tvDateInWork = (TextView) v.findViewById(R.id.tvDateInWork);
+        edNote = (EditText) v.findViewById(R.id.edNote);
+        spBase = (Spinner) v.findViewById(R.id.spBase);
+        spProgrammer = (Spinner) v.findViewById(R.id.spProgrammer);
+        tvAuthor = (TextView) v.findViewById(R.id.tvAuthor);
 
         tvCode.setText(mCurrentTask.getCode());
         edDescription.setText(mCurrentTask.getDescription());
         edContent.setText(mCurrentTask.getContent());
         switchIsInWork.setChecked(mCurrentTask.isInWork());
         switchIsClosed.setChecked(mCurrentTask.isClosed());
+        Utils utils = new Utils();
+        tvDateCreation.setText(utils.dateToString(mCurrentTask.getDateCreation(), Const.DATE_FORMAT_VID));
+        tvDateClosed.setText(utils.dateToString(mCurrentTask.getDateClosed(), Const.DATE_FORMAT_VID));
+        tvDateInWork.setText(utils.dateToString(mCurrentTask.getDateInWork(), Const.DATE_FORMAT_VID));
+        edNote.setText(mCurrentTask.getNote());
+        ArrayAdapter<WUser> adapter = new ArrayAdapter<>(getContext(),android.R.layout.simple_list_item_1,mUserList);
+        //spBase.setAdapter();
+        spProgrammer.setAdapter(adapter);
+        spProgrammer.setSelection(adapter.getPosition(utils.getUserByGuid((ArrayList<WUser>)mUserList,mCurrentTask.getProg_Key())));
+        tvAuthor.setText(utils.getUserByGuid((ArrayList<WUser>)mUserList,mCurrentTask.getAuthor_Key()).getDescription());
 
         edDescription.addTextChangedListener(textChangedListener);
         edContent.addTextChangedListener(textChangedListener);
         switchIsClosed.setOnCheckedChangeListener(switchChangedListener);
         switchIsInWork.setOnCheckedChangeListener(switchChangedListener);
+        edNote.addTextChangedListener(textChangedListener);
+        spProgrammer.setOnItemSelectedListener(itemSelectedListener);
+        spBase.setOnItemSelectedListener(itemSelectedListener);
         return v;
     }
 
@@ -133,7 +181,7 @@ public class Fragment_TaskItem extends Fragment {
         String ss_header = String.format(utils.getStringFromInputStream(is_header),currDate);
         String ss_footer = utils.getStringFromInputStream(is_footer);
         String ss_body = utils.format_task_body_to_save(mCurrentTask);
-        PostDataToServer.PostDataToServer_Task pdt = new PostDataToServer.PostDataToServer_Task();
+        PostDataToServer.PostDataToServer_Task pdt = new PostDataToServer.PostDataToServer_Task(getContext());
         pdt.execute("POST",ss_header+ss_body+ss_footer,CATALOG_TASKS,null);
         Log.e("saveTask_Server","SAVE");
         getActivity().finish();
@@ -142,8 +190,8 @@ public class Fragment_TaskItem extends Fragment {
     private void updateTask_Server(){
         Log.e("UPDATE ON SERVER","-");
         Utils utils = new Utils();
-        String ss2 = utils.format_task_patch_update(mCurrentTask);
-        PostDataToServer.PostDataToServer_Task pdt = new PostDataToServer.PostDataToServer_Task();
+        String ss2 = utils.format_task_patch_update(getContext(),mCurrentTask);
+        PostDataToServer.PostDataToServer_Task pdt = new PostDataToServer.PostDataToServer_Task(getContext());
         pdt.execute("PATCH",ss2,CATALOG_TASKS,mCurrentTask.getRef_Key());
         Log.e("updateTask_Server","UPDATE");
         getActivity().finish();
@@ -151,8 +199,8 @@ public class Fragment_TaskItem extends Fragment {
     private void deleteTask_Server(){
         Log.e("DELETE ON SERVER","-");
         Utils utils = new Utils();
-        String ss2 = utils.format_task_patch_delete(mCurrentTask);
-        PostDataToServer.PostDataToServer_Task pdt = new PostDataToServer.PostDataToServer_Task();
+        String ss2 = utils.format_task_patch_delete(getContext(),mCurrentTask);
+        PostDataToServer.PostDataToServer_Task pdt = new PostDataToServer.PostDataToServer_Task(getContext());
         pdt.execute("PATCH",ss2,CATALOG_TASKS,mCurrentTask.getRef_Key());
         Log.e("deleteTask_Server","DELETE");
         getActivity().finish();
@@ -175,17 +223,19 @@ public class Fragment_TaskItem extends Fragment {
         DeletionMark
 
         */
+        Utils utils = new Utils();
         mCurrentTask.setDescription(edDescription.getText().toString());
-        mCurrentTask.setAuthor_Key("4b1b55a1-bc6d-11e6-80c2-f2bd425ab9dd");
+        //mCurrentTask.setAuthor_Key("4b1b55a1-bc6d-11e6-80c2-f2bd425ab9dd");
         mCurrentTask.setContent(edContent.getText().toString());
-        mCurrentTask.setProg_Key("4b1b55a1-bc6d-11e6-80c2-f2bd425ab9dd");
-        //mCurrentTask.setNote();
-        //mCurrentTask.setDateInWork();
-        //mCurrentTask.setInWork();
-        //mCurrentTask.setClosed();
-        //mCurrentTask.setDateCreation();
-        //mCurrentTask.setContent();
-        //mCurrentTask.setDateClosed();
+        //mCurrentTask.setProg_Key("4b1b55a1-bc6d-11e6-80c2-f2bd425ab9dd");
+        WUser prog = (WUser)spProgrammer.getSelectedItem();
+        mCurrentTask.setProg_Key(prog.getRef_Key());
+        mCurrentTask.setNote(edNote.getText().toString());
+        mCurrentTask.setDateInWork(utils.dateFromString(tvDateInWork.getText().toString(),Const.DATE_FORMAT_VID));
+        mCurrentTask.setInWork(switchIsInWork.isChecked());
+        mCurrentTask.setClosed(switchIsClosed.isChecked());
+        //mCurrentTask.setDateCreation(utils.dateFromString(tvDateCreation.getText().toString(),Const.DATE_FORMAT_VID));
+        mCurrentTask.setDateClosed(utils.dateFromString(tvDateClosed.getText().toString(),Const.DATE_FORMAT_VID));
 
     }
 
@@ -222,6 +272,38 @@ public class Fragment_TaskItem extends Fragment {
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
             isDataChanged=true;
             setOptionsMenuVisibility();
+            Log.e("CHACKED CHANGED",""+buttonView.getId());
+            Utils utils = new Utils();
+            switch (buttonView.getId()){
+                case R.id.switchIsClosed:
+                    if(switchIsClosed.isChecked()){
+                        tvDateClosed.setText(utils.dateToString(new Date(),Const.DATE_FORMAT_VID));
+                    }else {
+                        tvDateClosed.setText("");
+                    }
+                    break;
+                case R.id.switchIsInWork:
+                    if(switchIsInWork.isChecked()){
+                        tvDateInWork.setText(utils.dateToString(new Date(),Const.DATE_FORMAT_VID));
+                    }else {
+                        tvDateInWork.setText("");
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+    private AdapterView.OnItemSelectedListener itemSelectedListener = new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            isDataChanged=true;
+            setOptionsMenuVisibility();
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+
         }
     };
 }

@@ -26,17 +26,20 @@ public class Activity_TaskItem extends AppCompatActivity {
     private List<WTask> mWTaskList;
     private List<WUser> mUserList;
     private List<WContragent> mContragentList;
+    private String mCurrentUserGuid;
     public static final String EXTRA_CURRENT_TASK = "currentTask";
     public static final String EXTRA_TASK_LIST = "TaskList";
     public static final String EXTRA_USER_LIST = "UserList";
     public static final String EXTRA_CONTRAGENT_LIST = "ContragentList";
+    public static final String EXTRA_CURRENT_USER_GUID = "CurrentUserGuid";
 
-    public static Intent newIntent(Context context, WTask currentTask, ArrayList<WTask> taskList, ArrayList<WUser>userList,ArrayList<WContragent>contragentList){
+    public static Intent newIntent(Context context, WTask currentTask, ArrayList<WTask> taskList, ArrayList<WUser>userList,ArrayList<WContragent>contragentList,String currentUserGuid){
         Intent intent = new Intent(context,Activity_TaskItem.class);
         intent.putExtra(EXTRA_CURRENT_TASK,currentTask);
         intent.putExtra(EXTRA_TASK_LIST, taskList);
         intent.putExtra(EXTRA_USER_LIST, userList);
         intent.putExtra(EXTRA_CONTRAGENT_LIST, contragentList);
+        intent.putExtra(EXTRA_CURRENT_USER_GUID, currentUserGuid);
 
         return intent;
     }
@@ -49,6 +52,8 @@ public class Activity_TaskItem extends AppCompatActivity {
         mWTaskList = (List<WTask>)getIntent().getSerializableExtra(EXTRA_TASK_LIST);
         mUserList = (List<WUser>)getIntent().getSerializableExtra(EXTRA_USER_LIST);
         mContragentList = (List<WContragent>)getIntent().getSerializableExtra(EXTRA_CONTRAGENT_LIST);
+        mCurrentUserGuid = getIntent().getStringExtra(EXTRA_CURRENT_USER_GUID);
+
         ViewPager viewPager = (ViewPager) findViewById(R.id.viewPager_container);
         FragmentManager fragmentManager = getSupportFragmentManager();
         viewPager.setAdapter(new FragmentStatePagerAdapter(fragmentManager) {
@@ -60,7 +65,7 @@ public class Activity_TaskItem extends AppCompatActivity {
                 }else {
                     item = mWTaskList.get(position);
                 }
-                return Fragment_TaskItem.newInstance(item,getApplicationContext());
+                return Fragment_TaskItem.newInstance(getApplicationContext(),item,mCurrentUserGuid,(ArrayList<WUser>)mUserList);
             }
 
             @Override

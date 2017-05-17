@@ -1,17 +1,15 @@
 package com.wolff.wrest1ctaskmanager.fragments;
 
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.Canvas;
-import android.graphics.Paint;
+import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -19,19 +17,22 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.wolff.wrest1ctaskmanager.R;
 import com.wolff.wrest1ctaskmanager.acivities.Activity_TaskItem;
 import com.wolff.wrest1ctaskmanager.acivities.Activity_preference;
 import com.wolff.wrest1ctaskmanager.model.Const;
-import com.wolff.wrest1ctaskmanager.model.W1c_fetchr;
+import com.wolff.wrest1ctaskmanager.tasks.W1c_fetchr;
 import com.wolff.wrest1ctaskmanager.model.WContragent;
 import com.wolff.wrest1ctaskmanager.model.WTask;
 import com.wolff.wrest1ctaskmanager.model.WUser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by wolff on 26.04.2017.
@@ -51,16 +52,29 @@ public class Fragment_TaskList extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getContext());
+        if((pref.getString("serverName","").equalsIgnoreCase(""))|(pref.getString("serverLogin","").equalsIgnoreCase(""))){
+            openPreferences();
+        }
+
+        new GetWUsers_Task().execute();
+        new GetWContragents_Task().execute();
+
         setHasOptionsMenu(true);
         setRetainInstance(true);
-        updateTaskList();
-        Log.e("","");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if(mUsersList!=null) {
+            updateTaskList();
+        }
     }
 
     private void updateTaskList() {
-        new GetWUsers_Task().execute();
-        new GetWContragents_Task().execute();
-        new GetWTasks_Task().execute();
+        Log.e("UPDATE TASK LIST","UPDATE TASK LIST");
+          new GetWTasks_Task().execute();
     }
 
     @Nullable
@@ -99,8 +113,6 @@ public class Fragment_TaskList extends Fragment {
                 openPreferences();
                 break;
             default:
-
-
             break;
         }
 
@@ -113,31 +125,28 @@ public class Fragment_TaskList extends Fragment {
         }
     }
     private void addNewTask(){
-        Log.e("ADD NEW TASK"," NULL");
-        Intent intent = Activity_TaskItem.newIntent(getContext(),null,null,(ArrayList<WUser>) mUsersList,(ArrayList<WContragent>) mContragentsList);
+        Intent intent = Activity_TaskItem.newIntent(getContext(),null,null,(ArrayList<WUser>) mUsersList,(ArrayList<WContragent>) mContragentsList,mCurrentUserGuid);
         startActivity(intent);
-
     }
     private void openPreferences(){
-        Log.e("OPEN PREF"," NULL");
         Intent intent = Activity_preference.newIntent(getContext());
         startActivity(intent);
-
     }
 //==================================================================================================
 private class TaskListHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
     private TextView mTitleTextView;
+    private ImageView mTitleImageView;
     private WTask mCurrentTask;
 
     public TaskListHolder(View itemView) {
         super(itemView);
         mTitleTextView = (TextView) itemView.findViewById(R.id.tvTaskDescribe);
+        mTitleImageView = (ImageView) itemView.findViewById(R.id.ivTaskDescribe);
         itemView.setOnClickListener(this);
     }
     public void bindTaskListItem(WTask item){
         mCurrentTask = item;
-      //
-        //String label = formatListItem(mCurrentTask);
+
         if(mCurrentTask.isClosed()){
             mTitleTextView.setTypeface(null, Typeface.ITALIC);
         }
@@ -145,13 +154,11 @@ private class TaskListHolder extends RecyclerView.ViewHolder implements View.OnC
             mTitleTextView.setTypeface(null, Typeface.BOLD);
         }
         if(mCurrentTask.isDeletionMark()) {
-         }
-        //mTitleTextView.setText(Html.fromHtml(label));
+            mTitleImageView.setImageResource(android.R.drawable.ic_delete);
+         }else {
+            mTitleImageView.setImageResource(android.R.drawable.checkbox_on_background);
+        }
         mTitleTextView.setText(mCurrentTask.getDescription());
-        //mTitleTextView.setText("Автор: "+mCurrentTask.getAuthor().getName()+", Дата создания:"+convert.dateToString(mCurrentTask.getDateCreate(),DATE_FORMAT_VID));
-
-
-        //
         mTitleTextView.setText(item.toString());
     }
 
@@ -159,8 +166,7 @@ private class TaskListHolder extends RecyclerView.ViewHolder implements View.OnC
  //-------------------------------------------------------------------------------------------------
     @Override
     public void onClick(View v) {
-        Log.e("ON CLICK"," "+mCurrentTask.getDescription());
-        Intent intent = Activity_TaskItem.newIntent(v.getContext(),mCurrentTask,(ArrayList<WTask>) mTaskList,(ArrayList<WUser>) mUsersList,(ArrayList<WContragent>)mContragentsList);
+        Intent intent = Activity_TaskItem.newIntent(v.getContext(),mCurrentTask,(ArrayList<WTask>) mTaskList,(ArrayList<WUser>) mUsersList,(ArrayList<WContragent>)mContragentsList,mCurrentUserGuid);
         startActivity(intent);
     }
 }
@@ -192,8 +198,6 @@ private class TaskListHolder extends RecyclerView.ViewHolder implements View.OnC
 //==================================================================================================
 
     public class GetWUsers_Task extends AsyncTask<Void,Void,List<WUser>> {
-        String TAG = "GetWUsers_Task";
-
         @Override
         protected List<WUser> doInBackground(Void... params) {
             W1c_fetchr w1c_fetchr = new W1c_fetchr();
@@ -204,17 +208,20 @@ private class TaskListHolder extends RecyclerView.ViewHolder implements View.OnC
         protected void onPostExecute(List<WUser> wUsers) {
             super.onPostExecute(wUsers);
             mUsersList = wUsers;
+            //Toast toast = Toast.makeText(getContext(),"Обновлен список пользователей",Toast.LENGTH_LONG);
+            //toast.show();
+            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getContext());
             for(WUser item:mUsersList){
-                if(item.getDescription().equalsIgnoreCase(Const.LOGIN)){
+                if(item.getDescription().equalsIgnoreCase(pref.getString("serverLogin",""))){
                     mCurrentUserGuid=item.getRef_Key();
+                    Log.e("GetWUsers_Task","mCurrentUserGuid = "+mCurrentUserGuid);
                 }
             }
+            updateTaskList();
         }
     }
 //==================================================================================================
 public class GetWContragents_Task extends AsyncTask<Void,Void,List<WContragent>> {
-    String TAG = "GetWContragents_Task";
-
     @Override
     protected List<WContragent> doInBackground(Void... params) {
         W1c_fetchr w1c_fetchr = new W1c_fetchr();
@@ -225,12 +232,12 @@ public class GetWContragents_Task extends AsyncTask<Void,Void,List<WContragent>>
     protected void onPostExecute(List<WContragent> wContragents) {
         super.onPostExecute(wContragents);
         mContragentsList = wContragents;
+        //Toast toast = Toast.makeText(getContext(),"Обновлен список контрагентов",Toast.LENGTH_LONG);
+        //toast.show();
     }
 }
     //==================================================================================================
     public class GetWTasks_Task extends AsyncTask<Void,Void,List<WTask>> {
-        String TAG = "GetWTasks_Task";
-
         @Override
         protected List<WTask> doInBackground(Void... params) {
             W1c_fetchr w1c_fetchr = new W1c_fetchr();
@@ -241,6 +248,8 @@ public class GetWContragents_Task extends AsyncTask<Void,Void,List<WContragent>>
         protected void onPostExecute(List<WTask> wTasks) {
             super.onPostExecute(wTasks);
             mTaskList = wTasks;
+            Toast toast = Toast.makeText(getContext(),"Обновлен список задач",Toast.LENGTH_LONG);
+            toast.show();
             setupAdapter();
             setOptionsMenuVisibility(true);
         }

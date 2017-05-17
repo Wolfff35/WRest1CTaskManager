@@ -12,7 +12,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".acivities.ActivityMain">
+        <activity android:name=".acivities.Activity_Main_TaskList">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -21,7 +21,7 @@
         </activity>
         <activity
             android:name=".acivities.Activity_TaskItem"
-            android:parentActivityName=".acivities.ActivityMain">
+            android:parentActivityName=".acivities.Activity_Main_TaskList">
         </activity>
         <activity
             android:name=".acivities.Activity_preference">

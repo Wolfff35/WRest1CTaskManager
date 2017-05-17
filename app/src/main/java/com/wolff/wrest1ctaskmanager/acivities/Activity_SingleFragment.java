@@ -11,12 +11,12 @@ import com.wolff.wrest1ctaskmanager.R;
  * Created by wolff on 06.04.2017.
  */
 
-public abstract class SingleFragmentActivity extends AppCompatActivity{
+public abstract class Activity_SingleFragment extends AppCompatActivity{
 
     protected abstract Fragment createFragment();
 
     protected int getLayoutResId(){
-        return R.layout.activity_main;
+        return R.layout.activity_singlefragment;
     }
 
     @Override
