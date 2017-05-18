@@ -34,7 +34,6 @@ public class PostDataToServer {
         conn.setReadTimeout(READ_TIMEOUT);
         conn.setConnectTimeout(CONNECT_TIMEOUT);
         try {
-            //conn.setRequestMethod("POST");
             conn.setRequestMethod(type);
             conn.setDoOutput(true);
             conn.setDoInput(true);

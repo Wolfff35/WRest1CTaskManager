@@ -9,36 +9,32 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ArrayAdapter;
 
 import com.wolff.wrest1ctaskmanager.R;
 import com.wolff.wrest1ctaskmanager.fragments.Fragment_TaskItem;
-import com.wolff.wrest1ctaskmanager.model.WContragent;
+import com.wolff.wrest1ctaskmanager.model.WBase;
 import com.wolff.wrest1ctaskmanager.model.WTask;
 import com.wolff.wrest1ctaskmanager.model.WUser;
 
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 
 public class Activity_TaskItem extends AppCompatActivity {
-    private List<WTask> mWTaskList;
-    private List<WUser> mUserList;
-    private List<WContragent> mContragentList;
+    private ArrayList<WTask> mTaskList;
+    private ArrayList<WUser> mUserList;
+    private ArrayList<WBase> mBasesList;
     private String mCurrentUserGuid;
     public static final String EXTRA_CURRENT_TASK = "currentTask";
     public static final String EXTRA_TASK_LIST = "TaskList";
     public static final String EXTRA_USER_LIST = "UserList";
-    public static final String EXTRA_CONTRAGENT_LIST = "ContragentList";
+    public static final String EXTRA_BASES_LIST = "BasesList";
     public static final String EXTRA_CURRENT_USER_GUID = "CurrentUserGuid";
 
-    public static Intent newIntent(Context context, WTask currentTask, ArrayList<WTask> taskList, ArrayList<WUser>userList,ArrayList<WContragent>contragentList,String currentUserGuid){
+    public static Intent newIntent(Context context, WTask currentTask, ArrayList<WTask> taskList, ArrayList<WUser>userList, ArrayList<WBase>basesList, String currentUserGuid){
         Intent intent = new Intent(context,Activity_TaskItem.class);
         intent.putExtra(EXTRA_CURRENT_TASK,currentTask);
         intent.putExtra(EXTRA_TASK_LIST, taskList);
         intent.putExtra(EXTRA_USER_LIST, userList);
-        intent.putExtra(EXTRA_CONTRAGENT_LIST, contragentList);
+        intent.putExtra(EXTRA_BASES_LIST, basesList);
         intent.putExtra(EXTRA_CURRENT_USER_GUID, currentUserGuid);
 
         return intent;
@@ -49,9 +45,9 @@ public class Activity_TaskItem extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task_item);
         WTask currentTask = (WTask) getIntent().getSerializableExtra(EXTRA_CURRENT_TASK);
-        mWTaskList = (List<WTask>)getIntent().getSerializableExtra(EXTRA_TASK_LIST);
-        mUserList = (List<WUser>)getIntent().getSerializableExtra(EXTRA_USER_LIST);
-        mContragentList = (List<WContragent>)getIntent().getSerializableExtra(EXTRA_CONTRAGENT_LIST);
+        mTaskList = (ArrayList<WTask>)getIntent().getSerializableExtra(EXTRA_TASK_LIST);
+        mUserList = (ArrayList<WUser>)getIntent().getSerializableExtra(EXTRA_USER_LIST);
+        mBasesList = (ArrayList<WBase>)getIntent().getSerializableExtra(EXTRA_BASES_LIST);
         mCurrentUserGuid = getIntent().getStringExtra(EXTRA_CURRENT_USER_GUID);
 
         ViewPager viewPager = (ViewPager) findViewById(R.id.viewPager_container);
@@ -60,27 +56,27 @@ public class Activity_TaskItem extends AppCompatActivity {
             @Override
             public Fragment getItem(int position) {
                 WTask item;
-                if(mWTaskList==null){
+                if(mTaskList==null){
                     item = null;
                 }else {
-                    item = mWTaskList.get(position);
+                    item = mTaskList.get(position);
                 }
-                return Fragment_TaskItem.newInstance(getApplicationContext(),item,mCurrentUserGuid,(ArrayList<WUser>)mUserList);
+                return Fragment_TaskItem.newInstance(getApplicationContext(),item,mCurrentUserGuid,mUserList,mBasesList);
             }
 
             @Override
             public int getCount() {
-                if(mWTaskList==null){
+                if(mTaskList==null){
                     return 1;
                 }else {
-                    return mWTaskList.size();
+                    return mTaskList.size();
                 }
             }
         });
-        if(mWTaskList==null){
+        if(mTaskList==null){
             viewPager.setCurrentItem(0);
         }else {
-            viewPager.setCurrentItem(mWTaskList.indexOf(currentTask));
+            viewPager.setCurrentItem(mTaskList.indexOf(currentTask));
         }
      }
 }

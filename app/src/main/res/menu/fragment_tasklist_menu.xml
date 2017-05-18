@@ -7,11 +7,6 @@
         android:title="@string/fragment_taskitem_menu_addnewtask"
         app:showAsAction="ifRoom|withText" />
     <item
-        android:id="@+id/menu_updatelist"
-        android:icon="@android:drawable/ic_input_get"
-        android:title="@string/fragment_taskitem_menu_updatelist"
-        app:showAsAction="ifRoom|withText" />
-    <item
         android:id="@+id/menu_preferences"
         android:icon="@android:drawable/ic_menu_preferences"
         android:title="@string/fragment_tasklist_preferences"

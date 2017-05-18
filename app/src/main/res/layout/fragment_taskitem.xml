@@ -62,13 +62,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Завершена"/>
+            android:text="Завершена"
+            android:elevation="2dp"/>
         <TextView
             android:id="@+id/tvDateClosed"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="2"
-            android:text="date closed"/>
+            android:text="date closed"
+            android:elevation="2dp"/>
 
     </LinearLayout>
 
@@ -76,27 +78,31 @@
         android:id="@+id/linearInWork"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:elevation="2dp">
 
         <Switch
             android:id="@+id/switchIsInWork"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="В работе"/>
+            android:text="В работе"
+            android:elevation="2dp"/>
         <TextView
             android:id="@+id/tvDateInWork"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="2"
-            android:text="date in work"/>
+            android:text="date in work"
+            android:elevation="2dp"/>
 
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:elevation="2dp">
 
         <TextView
             android:id="@+id/textView4"
@@ -112,13 +118,15 @@
             android:layout_weight="1"
             android:ems="10"
             android:hint="Описание"
-            android:inputType="textMultiLine"/>
+            android:inputType="textMultiLine"
+            android:elevation="2dp"/>
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:elevation="2dp">
 
         <TextView
             android:id="@+id/textView5"
@@ -134,13 +142,15 @@
             android:layout_weight="1"
             android:ems="10"
             android:hint="Содержание"
-            android:inputType="textMultiLine"/>
+            android:inputType="textMultiLine"
+            android:elevation="2dp"/>
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:elevation="2dp">
 
         <TextView
             android:id="@+id/textView6"
@@ -156,33 +166,16 @@
             android:layout_weight="1"
             android:ems="10"
             android:hint="Примечание"
-            android:inputType="textMultiLine"/>
+            android:inputType="textMultiLine"
+            android:elevation="2dp"/>
     </LinearLayout>
+
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:visibility="invisible">
-
-        <TextView
-            android:id="@+id/textView7"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="2"
-            android:text="База данных:"/>
-
-        <Spinner
-            android:id="@+id/spBase"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:elevation="2dp">
 
         <TextView
             android:id="@+id/textView8"
@@ -199,6 +192,26 @@
             android:layout_weight="1"
             android:background="@android:color/darker_gray"
             android:spinnerMode="dialog"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="visible"
+        android:elevation="2dp">
+
+        <TextView
+            android:id="@+id/textView7"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:text="База данных:"/>
+
+        <Spinner
+            android:id="@+id/spBase"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
     </LinearLayout>
 
 </LinearLayout>

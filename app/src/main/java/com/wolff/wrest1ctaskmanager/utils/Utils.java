@@ -1,8 +1,9 @@
 package com.wolff.wrest1ctaskmanager.utils;
 
 import android.content.Context;
-import android.util.Log;
 
+import com.wolff.wrest1ctaskmanager.model.Const;
+import com.wolff.wrest1ctaskmanager.model.WBase;
 import com.wolff.wrest1ctaskmanager.model.WUser;
 import com.wolff.wrest1ctaskmanager.tasks.W1c_fetchr;
 import com.wolff.wrest1ctaskmanager.model.WTask;
@@ -41,18 +42,17 @@ public class Utils {
             e.printStackTrace();
             return null;
         }
-        //return null;
     }
     public String dateToString(Date date,String strFormat){
+        Date locDate;
         if(date==null){
-            return "0001-01-01T00:00:00";
+             locDate = dateFromString("0001-01-01T00:00:00", Const.DATE_FORMAT_STR);
+        }else {
+            locDate=date;
         }
 
         DateFormat format = new SimpleDateFormat(strFormat, Locale.ENGLISH);
-        String strDate = format.format(date);
-        //if(strDate.contains("0001")){
-        //    return "0001-01-01T00:00:00";
-        //}
+        String strDate = format.format(locDate);
         return strDate;
     }
 //
@@ -80,26 +80,20 @@ public String getStringFromInputStream(InputStream is){
         addField(sb,"фЗавершена",String.valueOf(task.isClosed()));
         addField(sb,"ДатаСоздания",dateToString(task.getDateCreation(),DATE_FORMAT_STR));
         if((task.isClosed())&&(task.getDateClosed()!=null)) {
-        //if((task.getDateClosed()!=null)) {
             addField(sb, "ДатаЗавершения", dateToString(task.getDateClosed(), DATE_FORMAT_STR));
-        //}else {
-          //  addField(sb, "ДатаЗавершения", "");
         }
         addField(sb,"База_Key",task.getBase_Key());
         addField(sb,"фПринятаВРаботу",String.valueOf(task.isInWork()));
         if((task.isInWork())&&(task.getDateInWork()!=null)) {
-        //if((task.getDateInWork()!=null)) {
             addField(sb, "ДатаПринятияВРаботу", dateToString(task.getDateInWork(), DATE_FORMAT_STR));
-       // }else {
-           // addField(sb, "ДатаПринятияВРаботу", "");
         }
         addField(sb,"DeletionMark","false");
-        Log.e("formattosave",""+sb.toString());
+        addField(sb,"База_Key",task.getBase_Key());
+
         return sb.toString();
     }
 
     private void addField(StringBuffer sb,String fieldName,String field){
-        Log.e("addField",""+fieldName+": "+field);
         if(field!=null&&field!="") {
             sb.append("<d:" + fieldName + ">" + field + "</d:" + fieldName + ">");
         }
@@ -115,22 +109,12 @@ public String getStringFromInputStream(InputStream is){
             object.put("Примечание",task.getNote());
             object.put("Исполнитель_Key",task.getProg_Key());
             object.put("фЗавершена",task.isClosed());
-            if((task.isClosed())&&(task.getDateClosed()!=null)) {
-            //if((task.getDateClosed()!=null)) {
-                object.put("ДатаЗавершения", dateToString(task.getDateClosed(), DATE_FORMAT_STR));
-            //}else {
-            //    object.put("ДатаЗавершения", "0001-01-01T00:00:00");
-            }
+            object.put("ДатаЗавершения", dateToString(task.getDateClosed(), DATE_FORMAT_STR));
             object.put("фПринятаВРаботу",task.isInWork());
-            if((task.isInWork())&&(task.getDateInWork()!=null)) {
-            //if((task.getDateInWork()!=null)) {
-                object.put("ДатаПринятияВРаботу", dateToString(task.getDateInWork(), DATE_FORMAT_STR));
-            //}else {
-            //    object.put("ДатаПринятияВРаботу","0001-01-01T00:00:00");
-            }
+            object.put("ДатаПринятияВРаботу", dateToString(task.getDateInWork(), DATE_FORMAT_STR));
+            object.put("База_Key", task.getBase_Key());
             return object.toString();
         } catch (JSONException e) {
-            Log.e("ERROR"," = "+e.getLocalizedMessage());
             return null;
         }
     }
@@ -142,12 +126,19 @@ public String getStringFromInputStream(InputStream is){
             object.put("DeletionMark","true");
             return object.toString();
         } catch (JSONException e) {
-            Log.e("ERROR"," = "+e.getLocalizedMessage());
             return null;
         }
     }
     public WUser getUserByGuid(ArrayList<WUser> users,String guid){
         for(WUser item:users){
+            if(item.getRef_Key().equalsIgnoreCase(guid)){
+                return item;
+            }
+        }
+        return null;
+    }
+    public WBase getBaseByGuid(ArrayList<WBase> bases, String guid){
+        for(WBase item:bases){
             if(item.getRef_Key().equalsIgnoreCase(guid)){
                 return item;
             }

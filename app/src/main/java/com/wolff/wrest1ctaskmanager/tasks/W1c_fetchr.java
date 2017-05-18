@@ -5,10 +5,9 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.util.Base64;
-import android.util.Log;
 
 import com.wolff.wrest1ctaskmanager.model.Const;
-import com.wolff.wrest1ctaskmanager.model.WContragent;
+import com.wolff.wrest1ctaskmanager.model.WBase;
 import com.wolff.wrest1ctaskmanager.model.WTask;
 import com.wolff.wrest1ctaskmanager.model.WUser;
 import com.wolff.wrest1ctaskmanager.utils.Utils;
@@ -24,7 +23,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by wolff on 26.04.2017.
@@ -48,7 +46,6 @@ public class W1c_fetchr {
             }else {
                 url_s=null;
             }
-            //Log.e("GET CONNECTION",""+url_s);
             URL url = new URL(url_s);
             HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 
@@ -64,7 +61,6 @@ public class W1c_fetchr {
         return null;
     }
     private String getAuthorization1C(Context context){
-        //Const.LOGIN+ ":" + Const.PASSWORD
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
         return pref.getString("serverLogin","")+":"+pref.getString("serverPassword","");
     }
@@ -103,11 +99,6 @@ private String getFiltersForQuery(Context context,String catalog, String guidCur
     StringBuffer sb = new StringBuffer();
 
      if(catalog.equalsIgnoreCase(Const.CATALOG_TASKS)){
-        Log.e("GET FILTER","iAmAuthor = "+iAmAuthor);
-        Log.e("GET FILTER","iAmProgrammer = "+iAmProgrammer);
-        Log.e("GET FILTER","notDeleted = "+notDeleted);
-        Log.e("GET FILTER","notFinished = "+notFinished);
-
         if(iAmAuthor|iAmProgrammer|notDeleted|notFinished){
             sb.append("&$filter=");
         }else{
@@ -138,7 +129,6 @@ if (notDeleted){
             }
             sb.append("фЗавершена%20eq%20false");
         }
-        Log.e("GET FILTER",""+sb.toString());
         return  sb.toString();
     }
     return "";
@@ -146,8 +136,8 @@ if (notDeleted){
 
 
     //--------------------------------------------------------------------------------------------------
-    public List<WUser> fetchWUsers(Context context){
-        List<WUser> wUsers = new ArrayList<>();
+    public ArrayList<WUser> fetchWUsers(Context context){
+        ArrayList<WUser> wUsers = new ArrayList<>();
         try {
             String jsonStringUsers = getUrlString(context,Const.CATALOG_USERS,null);
             JSONObject jsonbody = new JSONObject(jsonStringUsers);
@@ -161,7 +151,7 @@ if (notDeleted){
         return null;
     }
 
-    private void parseWUsers(List<WUser> wUsers, JSONObject jsonBody) {
+    private void parseWUsers(ArrayList<WUser> wUsers, JSONObject jsonBody) {
 
         try {
             JSONArray usersJsonArray = jsonBody.getJSONArray("value");
@@ -184,13 +174,13 @@ if (notDeleted){
 
       }
 //--------------------------------------------------------------------------------------------------
-public List<WContragent> fetchWContragents(Context context){
-    List<WContragent> wContragents = new ArrayList<>();
+public ArrayList<WBase> fetchWBases(Context context){
+    ArrayList<WBase> wBases = new ArrayList<>();
     try {
-        String jsonStringUsers = getUrlString(context,Const.CATALOG_KONTRAG,null);
+        String jsonStringUsers = getUrlString(context,Const.CATALOG_KONTRAG_BASES,null);
         JSONObject jsonbody = new JSONObject(jsonStringUsers);
-        parseWContragents(wContragents,jsonbody);
-        return wContragents;
+        parseWBases(wBases,jsonbody);
+        return wBases;
     } catch (IOException e) {
         e.printStackTrace();
     } catch (JSONException e) {
@@ -198,17 +188,17 @@ public List<WContragent> fetchWContragents(Context context){
     }
     return null;
 }
-    private void parseWContragents(List<WContragent> wContragents, JSONObject jsonBody) {
+    private void parseWBases(ArrayList<WBase> wBases, JSONObject jsonBody) {
         try {
             JSONArray usersJsonArray = jsonBody.getJSONArray("value");
             for (int i = 0; i < usersJsonArray.length(); i++) {
                 JSONObject userJsonObject = usersJsonArray.getJSONObject(i);
-                WContragent item = new WContragent();
+                WBase item = new WBase();
                 item.setRef_Key(userJsonObject.getString("Ref_Key"));
                 item.setDescription(userJsonObject.getString("Description"));
                 item.setDeletionMark(userJsonObject.getBoolean("DeletionMark"));
                 item.setCode(userJsonObject.getString("Code"));
-                wContragents.add(item);
+                wBases.add(item);
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -216,8 +206,8 @@ public List<WContragent> fetchWContragents(Context context){
     }
 
     //--------------------------------------------------------------------------------------------------
-    public List<WTask> fetchWTasks(Context context, String guidCurrentUser){
-        List<WTask> wTasks = new ArrayList<>();
+    public ArrayList<WTask> fetchWTasks(Context context, String guidCurrentUser){
+        ArrayList<WTask> wTasks = new ArrayList<>();
         try {
             String jsonStringUsers = getUrlString(context,Const.CATALOG_TASKS,guidCurrentUser);
             JSONObject jsonbody = new JSONObject(jsonStringUsers);
@@ -230,7 +220,7 @@ public List<WContragent> fetchWContragents(Context context){
         }
         return null;
     }
-    private void parseWTasks(List<WTask> wTasks, JSONObject jsonBody) {
+    private void parseWTasks(ArrayList<WTask> wTasks, JSONObject jsonBody) {
          try {
             JSONArray usersJsonArray = jsonBody.getJSONArray("value");
             for (int i = 0; i < usersJsonArray.length(); i++) {
