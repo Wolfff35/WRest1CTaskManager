@@ -5,11 +5,11 @@
         android:id="@+id/menu_addnewtask"
         android:icon="@android:drawable/ic_menu_add"
         android:title="@string/fragment_taskitem_menu_addnewtask"
-        app:showAsAction="ifRoom|withText" />
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/menu_preferences"
         android:icon="@android:drawable/ic_menu_preferences"
         android:title="@string/fragment_tasklist_preferences"
-        app:showAsAction="ifRoom|withText" />
+        app:showAsAction="ifRoom" />
 
 </menu>

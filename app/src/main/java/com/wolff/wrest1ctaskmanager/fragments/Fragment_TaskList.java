@@ -1,12 +1,15 @@
 package com.wolff.wrest1ctaskmanager.fragments;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -137,8 +140,19 @@ private class TaskListHolder extends RecyclerView.ViewHolder implements View.OnC
  //-------------------------------------------------------------------------------------------------
     @Override
     public void onClick(View v) {
-        Intent intent = Activity_TaskItem.newIntent(v.getContext(),mCurrentTask,mTaskList,mUsersList,mBasesList,mCurrentUserGuid);
-        startActivity(intent);
+        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            Intent intent = Activity_TaskItem.newIntent(v.getContext(), mCurrentTask, mTaskList, mUsersList, mBasesList, mCurrentUserGuid);
+            startActivity(intent);
+        }else {
+            FragmentManager fm = getActivity().getSupportFragmentManager();
+            Fragment fragment = new Fragment_TaskItem().newInstance(v.getContext(),mCurrentTask,mCurrentUserGuid,mUsersList,mBasesList);
+            fm.beginTransaction()
+                    .replace(R.id.container_detail, fragment)
+                    .commit();
+            Log.e("on Click","ВЫВЕЛИ ФРАГМЕНТ DETAIL");
+
+        }
+
     }
 }
 

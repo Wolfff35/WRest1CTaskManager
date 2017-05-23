@@ -2,11 +2,13 @@ package com.wolff.wrest1ctaskmanager.fragments;
 
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -42,6 +44,7 @@ public class Fragment_TaskItem extends Fragment {
     private static final String ARG_CURRENT_USER_GUID = "CurrentUserGuid";
     private static final String ARG_USER_LIST = "WUserList";
     private static final String ARG_BASES_LIST = "WBasesList";
+    private int itemClickCounter=0;
 
     private WTask mCurrentTask;
     private String mCurrentUserGuid;
@@ -81,7 +84,6 @@ public class Fragment_TaskItem extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
         mCurrentTask = (WTask)getArguments().getSerializable(ARG_WTASK);
         mCurrentUserGuid = getArguments().getString(ARG_CURRENT_USER_GUID);
         mUserList = (ArrayList<WUser>)getArguments().getSerializable(ARG_USER_LIST);
@@ -93,6 +95,7 @@ public class Fragment_TaskItem extends Fragment {
             mCurrentTask.setAuthor_Key(mCurrentUserGuid);
             mCurrentTask.setDateCreation(new Date());
         }
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -140,6 +143,9 @@ public class Fragment_TaskItem extends Fragment {
         edNote.addTextChangedListener(textChangedListener);
         spProgrammer.setOnItemSelectedListener(itemSelectedListener);
         spBase.setOnItemSelectedListener(itemSelectedListener);
+
+        //Log.e("onCreateView","onCreateView");
+
         return v;
     }
 
@@ -149,6 +155,7 @@ public class Fragment_TaskItem extends Fragment {
         inflater.inflate(R.menu.fragment_taskitem_menu, menu);
         setOptionsMenuVisibility();
         super.onCreateOptionsMenu(optionsMenu, inflater);
+        Log.e("onCreateOptionsMenu","onCreateOptionsMenu");
     }
 
     @Override
@@ -174,6 +181,17 @@ public class Fragment_TaskItem extends Fragment {
         return super.onOptionsItemSelected(item);
     }
     //==============================================================================================
+    private void updateUX(){
+        if(getResources().getConfiguration().orientation== Configuration.ORIENTATION_PORTRAIT){
+            getActivity().finish();
+        }else {
+            isDataChanged=false;
+            isNewItem=false;
+            setOptionsMenuVisibility();
+        }
+
+    }
+
     private void saveTask_Server(){
         Utils utils = new Utils();
         String currDate = utils.dateToString(new Date(),DATE_FORMAT_STR);
@@ -185,24 +203,26 @@ public class Fragment_TaskItem extends Fragment {
         String ss_body = utils.format_task_body_to_save(mCurrentTask);
         PostDataToServer.PostDataToServer_Task pdt = new PostDataToServer.PostDataToServer_Task(getContext());
         pdt.execute("POST",ss_header+ss_body+ss_footer,CATALOG_TASKS,null);
-        getActivity().finish();
-    }
+        updateUX();
+     }
 
     private void updateTask_Server(){
         Utils utils = new Utils();
         String ss2 = utils.format_task_patch_update(getContext(),mCurrentTask);
         PostDataToServer.PostDataToServer_Task pdt = new PostDataToServer.PostDataToServer_Task(getContext());
         pdt.execute("PATCH",ss2,CATALOG_TASKS,mCurrentTask.getRef_Key());
-        getActivity().finish();
+       // getActivity().finish();
+        updateUX();
     }
     private void deleteTask_Server(){
         Utils utils = new Utils();
         String ss2 = utils.format_task_patch_delete(getContext(),mCurrentTask);
         PostDataToServer.PostDataToServer_Task pdt = new PostDataToServer.PostDataToServer_Task(getContext());
         pdt.execute("PATCH",ss2,CATALOG_TASKS,mCurrentTask.getRef_Key());
-        getActivity().finish();
-
+        //getActivity().finish();
+        updateUX();
     }
+
     private void updateCurremtTaskFields(){
        //обновляет поля текущего элемента для апдейта или сейва на сервере
         Utils utils = new Utils();
@@ -225,7 +245,8 @@ public class Fragment_TaskItem extends Fragment {
             MenuItem item_save = optionsMenu.findItem(R.id.menu_save);
             item_save.setVisible(isDataChanged);
             MenuItem item_delete = optionsMenu.findItem(R.id.menu_delete);
-            item_delete.setVisible(!isNewItem);
+            item_delete.setVisible(!isNewItem&&!mCurrentTask.isDeletionMark());
+            Log.e("setVisibility2","isDataChanged = "+isDataChanged+"; isNewItem = "+isNewItem);
         }
     }
     //=========================== LISTENERS ========================================================
@@ -244,11 +265,13 @@ public class Fragment_TaskItem extends Fragment {
         public void afterTextChanged(Editable s) {
             isDataChanged=true;
             setOptionsMenuVisibility();
+            Log.e("afterTextChanged","TEXT CHANGED");
         }
     };
     private CompoundButton.OnCheckedChangeListener switchChangedListener = new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            Log.e("switchChangedListener","SWITCH CHANGED");
             isDataChanged=true;
             setOptionsMenuVisibility();
             Utils utils = new Utils();
@@ -275,8 +298,12 @@ public class Fragment_TaskItem extends Fragment {
     private AdapterView.OnItemSelectedListener itemSelectedListener = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            isDataChanged=true;
-            setOptionsMenuVisibility();
+            itemClickCounter=itemClickCounter+1;
+            Log.e("itemSelectedListener", "ITEM SELECTED" + itemClickCounter);
+            if(itemClickCounter>2) {
+                isDataChanged = true;
+                setOptionsMenuVisibility();
+            }
         }
 
         @Override
@@ -284,4 +311,5 @@ public class Fragment_TaskItem extends Fragment {
 
         }
     };
+
 }

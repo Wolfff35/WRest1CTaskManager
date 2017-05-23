@@ -5,10 +5,10 @@
         android:id="@+id/menu_save"
         android:icon="@android:drawable/ic_menu_save"
         android:title="@string/fragment_taskitem_menu_save"
-        app:showAsAction="ifRoom|withText"/>
+        app:showAsAction="ifRoom"/>
     <item
         android:id="@+id/menu_delete"
         android:icon="@android:drawable/ic_menu_delete"
         android:title="@string/fragment_taskitem_menu_delete"
-        app:showAsAction="ifRoom|withText"/>
+        app:showAsAction="ifRoom"/>
 </menu>

@@ -5,6 +5,6 @@
         android:id="@+id/menu_updatelist"
         android:icon="@android:drawable/ic_input_get"
         android:title="@string/fragment_taskitem_menu_updatelist"
-        app:showAsAction="ifRoom|withText" />
+        app:showAsAction="ifRoom" />
 
 </menu>
